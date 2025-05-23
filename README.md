@@ -31,7 +31,7 @@ Follow these steps to set up and install RaspControll on your Raspberry Pi:
 1.  **Clone the Repository**:
     Open a terminal on your Raspberry Pi and run:
     ```bash
-    git clone https://github.com/your-username/RaspControll.git # Replace with actual repo URL
+    git clone https://github.com/nkhearn/RaspControll.git # Replace with actual repo URL
     cd RaspControll
     ```
 
