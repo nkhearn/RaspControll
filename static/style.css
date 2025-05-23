@@ -1,0 +1,107 @@
+/* Custom Styles for RaspControll */
+
+body {
+    font-family: 'Roboto', sans-serif; /* Example: Using Roboto font */
+    padding-top: 56px; /* Adjust if using a fixed-top navbar, Bootstrap 5 standard navbar height */
+}
+
+/* Navbar customisations */
+.navbar-dark.bg-dark { /* Targeting the specific navbar classes used */
+    background-color: #343a40 !important; /* Darker shade for navbar */
+}
+
+/* SSH Shell specific styles */
+#output_area {
+    background-color: #f8f9fa; /* Light gray background for output */
+    border: 1px solid #ced4da; /* Standard Bootstrap border color */
+    border-radius: .25rem; /* Bootstrap's default border radius */
+    padding: 1rem;
+    min-height: 200px;
+    max-height: 450px; /* Increased max-height */
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace; /* Monospace font for shell output */
+    font-size: 0.9rem;
+    white-space: pre-wrap; /* Ensure lines wrap but preserve whitespace */
+    word-break: break-all; /* Break long words to prevent overflow */
+}
+
+#output_area pre {
+    margin-bottom: 0.5rem; /* Spacing between command and output lines */
+}
+
+
+/* Card header customisations for sensor readings */
+.card-header.bg-primary {
+    background-color: #007bff !important;
+}
+.card-header.bg-info {
+    background-color: #17a2b8 !important;
+}
+.card-header.bg-secondary {
+    background-color: #6c757d !important;
+}
+.card-header.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* System Monitoring Cards */
+.card .card-header {
+    font-weight: bold;
+}
+
+/* Responsive images */
+img.img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Jumbotron on index page for better visual hierarchy */
+.jumbotron {
+    padding: 2rem 1rem;
+    margin-bottom: 2rem;
+    background-color: #e9ecef;
+    border-radius: .3rem;
+}
+
+@media (min-width: 576px) {
+    .jumbotron {
+        padding: 4rem 2rem;
+    }
+}
+
+/* Ensure content area has some padding below the navbar */
+.container.mt-4 {
+    margin-top: 1.5rem !important; /* Default Bootstrap spacing */
+    padding-bottom: 60px; /* Add padding to the bottom of the content container */
+}
+
+/* Footer (optional, if you add one) */
+/*
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #e7e7e7;
+}
+*/
+
+/* Make sure buttons in forms are properly spaced */
+form .btn {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+/* Specific adjustments for smaller screens if needed */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 1.75rem; /* Slightly smaller headings on mobile */
+    }
+    .navbar-brand {
+        font-size: 1.1rem; /* Adjust navbar brand size */
+    }
+}

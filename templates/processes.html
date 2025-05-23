@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Running Processes</h2>
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>PID</th>
+                <th>User</th>
+                <th>CPU%</th>
+                <th>MEM%</th>
+                <th>Command</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for process in processes %}
+            <tr>
+                <td>{{ process.pid }}</td>
+                <td>{{ process.user }}</td>
+                <td>{{ process.cpu }}</td>
+                <td>{{ process.mem }}</td>
+                <td style="word-break: break-all;">{{ process.command }}</td>
+                <td><a href="#" class="btn btn-danger btn-sm" onclick="alert('Simulated kill for PID {{ process.pid }}'); return false;">Kill</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

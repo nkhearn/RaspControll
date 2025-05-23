@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Notifications</h2>
+
+{% if notifications %}
+    <ul class="list-group mb-3">
+        {% for notification in notifications %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ notification.message }}
+                <span class="badge bg-secondary rounded-pill">{{ notification.timestamp }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        No new notifications.
+    </div>
+{% endif %}
+
+<h3 class="mt-4">Add a Test Notification</h3>
+<form action="{{ url_for('add_notification') }}" method="post" class="mb-3">
+    <div class="input-group">
+        <input type="text" id="message" name="message" class="form-control" placeholder="Enter notification message" required>
+        <button type="submit" class="btn btn-primary">Add Notification</button>
+    </div>
+</form>
+
+<form action="{{ url_for('clear_notifications') }}" method="post" class="mb-3">
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to clear all notifications?');">Clear All Notifications</button>
+</form>
+
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

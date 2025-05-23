@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>SSH Shell</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="alert alert-danger mt-3" role="alert">
+  <h4 class="alert-heading">Security Warning!</h4>
+  <p>Commands entered here are executed directly on the server with the permissions of the web server user. 
+  Incorrect or malicious commands can cause serious damage to your system. 
+  Execution of commands like 'sudo', 'reboot', 'shutdown', 'rm -rf', 'mkfs', 'mv', 'cp', 'chown', 'chmod' is blocked.
+  Use with extreme caution.</p>
+  <hr>
+  <p class="mb-0">Only enter commands if you fully understand the risks involved. All commands are run from the user's home directory.</p>
+</div>
+
+<form action="{{ url_for('ssh_command_execute') }}" method="post" class="my-3">
+    <div class="input-group">
+        <input type="text" id="command" name="command" class="form-control" placeholder="Enter command (e.g., ls -l, pwd, date)" required 
+               value="{{ last_command if last_command and last_command.lower() != 'clear' else '' }}">
+        <button type="submit" class="btn btn-primary">Execute</button>
+    </div>
+</form>
+
+<form action="{{ url_for('clear_ssh_history') }}" method="post" class="mb-3">
+    <button type="submit" class="btn btn-sm btn-warning">Clear Command History</button>
+</form>
+
+<div class="mt-4">
+    {% if last_command and last_command.lower() != 'clear' %}
+        <h5>Last Command Executed:</h5>
+        <pre class="bg-light p-2 rounded"><code>{{ last_command }}</code></pre>
+    {% endif %}
+    
+    {% if last_command_output %}
+        <h5>Output:</h5>
+        <pre class="bg-light p-2 rounded" style="white-space: pre-wrap; word-break: break-all;"><code>{{ last_command_output }}</code></pre>
+    {% endif %}
+
+    {% if last_command_error %}
+        <h5>Error:</h5>
+        <pre class="bg-danger text-white p-2 rounded" style="white-space: pre-wrap; word-break: break-all;"><code>{{ last_command_error }}</code></pre>
+    {% elif not last_command_output and last_command and last_command.lower() != 'clear' and not last_command_error %}
+        {# This case is for when there was no output and no error, but a command was run #}
+        {# The app.py logic sets "[Command executed successfully with no output]" for this case. #}
+        {# So, this specific block might not be strictly needed if app.py always provides some output. #}
+    {% elif not last_command and not last_command_error and last_command_output == "No commands executed yet or history cleared." %}
+         <h5>Output:</h5>
+         <pre class="bg-light p-2 rounded text-muted"><code>{{ last_command_output }}</code></pre>
+    {% endif %}
+</div>
+
+
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

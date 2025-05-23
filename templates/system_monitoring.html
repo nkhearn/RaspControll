@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>System Monitoring</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">CPU Usage</div>
+            <div class="card-body">
+                <p class="card-text">{{ stats.cpu_usage }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">RAM Usage</div>
+            <div class="card-body">
+                <p class="card-text">{{ stats.ram_usage }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Storage Usage</div>
+            <div class="card-body">
+                <p class="card-text">{{ stats.storage_usage }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Network Usage</div>
+            <div class="card-body">
+                <p class="card-text"><strong>Sent:</strong> {{ stats.network_sent }}</p>
+                <p class="card-text"><strong>Received:</strong> {{ stats.network_received }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card mb-3">
+            <div class="card-header">Uptime</div>
+            <div class="card-body">
+                <p class="card-text">{{ stats.uptime }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
