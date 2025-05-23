@@ -154,9 +154,12 @@ simulated_files = [
 
 # Simulated System Statistics (Fallback)
 dummy_stats = {
-    "cpu_usage": "25% (Simulated)", "ram_usage": "512MB / 1024MB (50.00%) (Simulated)",
-    "storage_usage": "10GB / 32GB (31.25%) (Simulated)", "network_sent": "1.20 GB (Simulated)",
-    "network_received": "500.00 MB (Simulated)", "uptime": "3 days, 5 hours, 0 minutes (Simulated)"
+    "cpu_usage": "25% (Simulated)", "cpu_usage_percent": 25,
+    "ram_usage": "512MB / 1024MB (50.00%) (Simulated)", "ram_percent": 50.00,
+    "storage_usage": "10GB / 32GB (31.25%) (Simulated)", "disk_percent": 31.25,
+    "network_sent": "1.20 GB (Simulated)",
+    "network_received": "500.00 MB (Simulated)", 
+    "uptime": "3 days, 5 hours, 0 minutes (Simulated)"
 }
 # Simulated Sensor Data
 dummy_sensor_data = {
@@ -173,10 +176,85 @@ dummy_processes = [
 ]
 # Simulated Raspberry Pi Information
 dummy_pi_info = {
-    "model": "Raspberry Pi 4 Model B (Simulated)", "soc": "Broadcom BCM2711 (Simulated)", "ram": "4GB (Simulated)",
-    "serial_number": "SIMULATED00001", "os_version": "Raspbian GNU/Linux 11 (bullseye) (Simulated)",
-    "kernel_version": "5.10.x-v7l+ (Simulated)"
+    "model": "Raspberry Pi 3 Model B+ Rev 1.3 (Simulated)",
+    "soc": "BCM2837B0 (Simulated)",
+    "ram": "1GB (Simulated)",
+    "serial_number": "SIMULATED00000000e0d5c7e5",
+    "os_version": "Raspbian GNU/Linux 10 (buster) (Simulated)",
+    "kernel_version": "5.4.51-v7l+ (Simulated)"
 }
+
+# Function to get real Raspberry Pi information
+def get_real_pi_info():
+    info = dummy_pi_info.copy() # Start with defaults, override with real data
+
+    try: # Get Model, SoC, Serial from /proc/cpuinfo
+        output = subprocess.check_output(["cat", "/proc/cpuinfo"], text=True)
+        lines = output.splitlines()
+        model_found = False
+        soc_found = False
+        serial_found = False
+        for line in lines:
+            if line.startswith("Hardware") and not model_found: # Often used for SoC/Model on older Pis
+                info["soc"] = line.split(":")[1].strip()
+                # Model might be same as SoC or derived, let's try to find a better "Model" line
+                # If "Model" line specific to Pi is found, it will overwrite this.
+                info["model"] = info["soc"] 
+                soc_found = True # Hardware line can be a proxy for SoC
+            if line.startswith("Model") and not model_found: # More specific model line for some Pis
+                 info["model"] = line.split(":")[1].strip()
+                 model_found = True
+            if line.lower().startswith("model name") and not soc_found: # Common for CPU model, can be SoC too
+                info["soc"] = line.split(":")[1].strip()
+                soc_found = True
+            if line.startswith("Serial") and not serial_found:
+                info["serial_number"] = line.split(":")[1].strip()
+                serial_found = True
+            # If both model and soc found, and serial is found (or we don't care if it's missing for this check)
+            if model_found and soc_found and serial_found: 
+                break
+        if not model_found: print("Warning: Could not parse Model from /proc/cpuinfo. Using default.")
+        if not soc_found: print("Warning: Could not parse SoC from /proc/cpuinfo. Using default.")
+        if not serial_found: print("Warning: Could not parse Serial Number from /proc/cpuinfo. Using default.")
+
+    except Exception as e:
+        print(f"Error reading /proc/cpuinfo: {e}. Falling back to dummy values for model, soc, serial.")
+
+    try: # Get RAM from free -m
+        output = subprocess.check_output(["free", "-m"], text=True)
+        lines = output.splitlines()
+        for line in lines:
+            if line.startswith("Mem:"):
+                parts = line.split()
+                info["ram"] = f"{parts[1]}MB" # Total RAM in MB
+                break
+        else: print("Warning: Could not parse RAM from 'free -m'. Using default.")
+    except Exception as e:
+        print(f"Error running 'free -m': {e}. Falling back to dummy value for RAM.")
+
+    try: # Get OS Version from /etc/os-release
+        output = subprocess.check_output(["cat", "/etc/os-release"], text=True)
+        lines = output.splitlines()
+        for line in lines:
+            if line.startswith("PRETTY_NAME="):
+                info["os_version"] = line.split("=")[1].strip().strip('"')
+                break
+        else: print("Warning: Could not parse OS Version from /etc/os-release. Using default.")
+    except Exception as e:
+        print(f"Error reading /etc/os-release: {e}. Falling back to dummy value for OS Version.")
+
+    try: # Get Kernel Version from uname -r
+        info["kernel_version"] = subprocess.check_output(["uname", "-r"], text=True).strip()
+    except Exception as e:
+        print(f"Error running 'uname -r': {e}. Falling back to dummy value for Kernel Version.")
+        
+    # Ensure all keys still exist, even if some commands failed.
+    for key, val in dummy_pi_info.items():
+        if key not in info or info[key] is None: # If a key was missed or set to None
+            info[key] = val + " (Error fetching)" # Mark as error for this specific field
+            print(f"Warning: Using fallback for '{key}' due to previous error or missing value.")
+
+    return info
 
 @app.route('/')
 def index(): return render_template('index.html')
@@ -412,31 +490,69 @@ def clear_ssh_history():
 @app.route('/system-monitoring')
 def system_monitoring():
     stats_to_display = dummy_stats.copy(); simulation_note = ""
+    pi_info_data = get_real_pi_info()
+
     if PSUTIL_AVAILABLE:
         try:
-            cpu_usage = psutil.cpu_percent(interval=0.5); ram = psutil.virtual_memory()
-            ram_total_fmt = format_bytes(ram.total); ram_used_fmt = format_bytes(ram.used); ram_percent = ram.percent
-            disk = psutil.disk_usage('/'); disk_total_fmt = format_bytes(disk.total); disk_used_fmt = format_bytes(disk.used); disk_percent = disk.percent
-            net_io = psutil.net_io_counters(); net_sent_fmt = format_bytes(net_io.bytes_sent); net_received_fmt = format_bytes(net_io.bytes_recv)
-            boot_time_timestamp = psutil.boot_time(); current_time_timestamp = datetime.datetime.now().timestamp()
-            uptime_seconds = current_time_timestamp - boot_time_timestamp; days = int(uptime_seconds // (24 * 3600))
-            uptime_seconds %= (24 * 3600); hours = int(uptime_seconds // 3600); uptime_seconds %= 3600; minutes = int(uptime_seconds // 60)
+            cpu_usage_val = psutil.cpu_percent(interval=0.5)
+            ram = psutil.virtual_memory()
+            ram_total_fmt = format_bytes(ram.total)
+            ram_used_fmt = format_bytes(ram.used)
+            ram_percent_val = ram.percent
+            
+            disk = psutil.disk_usage('/')
+            disk_total_fmt = format_bytes(disk.total)
+            disk_used_fmt = format_bytes(disk.used)
+            disk_percent_val = disk.percent
+            
+            net_io = psutil.net_io_counters()
+            net_sent_fmt = format_bytes(net_io.bytes_sent)
+            net_received_fmt = format_bytes(net_io.bytes_recv)
+            
+            boot_time_timestamp = psutil.boot_time()
+            current_time_timestamp = datetime.datetime.now().timestamp()
+            uptime_seconds = current_time_timestamp - boot_time_timestamp
+            days = int(uptime_seconds // (24 * 3600))
+            uptime_seconds %= (24 * 3600)
+            hours = int(uptime_seconds // 3600)
+            uptime_seconds %= 3600
+            minutes = int(uptime_seconds // 60)
             uptime_str = f"{days} days, {hours} hours, {minutes} minutes"
-            stats_to_display = {"cpu_usage": f"{cpu_usage}%", "ram_usage": f"{ram_used_fmt} / {ram_total_fmt} ({ram_percent}%)",
-                                "storage_usage": f"{disk_used_fmt} / {disk_total_fmt} ({disk_percent}%)", "network_sent": net_sent_fmt,
-                                "network_received": net_received_fmt, "uptime": uptime_str}
+            
+            stats_to_display = {
+                "cpu_usage": f"{cpu_usage_val}%", "cpu_usage_percent": cpu_usage_val,
+                "ram_usage": f"{ram_used_fmt} / {ram_total_fmt} ({ram_percent_val}%)", "ram_percent": ram_percent_val,
+                "storage_usage": f"{disk_used_fmt} / {disk_total_fmt} ({disk_percent_val}%)", "disk_percent": disk_percent_val,
+                "network_sent": net_sent_fmt,
+                "network_received": net_received_fmt, 
+                "uptime": uptime_str
+            }
         except Exception as e:
             print(f"Error fetching system stats with psutil: {e}. Falling back to simulated data.")
             simulation_note = f" (Error: {e}. Using simulated data.)"
-            for key in stats_to_display: 
-                if "(Simulated)" in stats_to_display[key] and simulation_note not in stats_to_display[key]: stats_to_display[key] = stats_to_display[key].replace("(Simulated)", simulation_note)
-                elif simulation_note not in stats_to_display[key]: stats_to_display[key] = f"{stats_to_display[key]}{simulation_note}"
-    else:
+            # Apply simulation note to string display values if error occurs
+            for key in ["cpu_usage", "ram_usage", "storage_usage", "network_sent", "network_received", "uptime"]:
+                if key in stats_to_display: # stats_to_display would be dummy_stats here
+                    if "(Simulated)" not in stats_to_display[key] and simulation_note not in stats_to_display[key]:
+                         stats_to_display[key] = stats_to_display[key].replace("(Simulated)", simulation_note) if "(Simulated)" in stats_to_display[key] else f"{stats_to_display[key]}{simulation_note}"
+                # Ensure numeric keys have fallbacks from dummy_stats if psutil fails mid-way
+                if key + "_percent" in dummy_stats and key + "_percent" not in stats_to_display:
+                    stats_to_display[key + "_percent"] = dummy_stats[key + "_percent"]
+
+
+    else: # psutil not available
         simulation_note = " (psutil not available. Using simulated data.)"
-        for key in stats_to_display:
-            if "(Simulated)" in stats_to_display[key] and simulation_note not in stats_to_display[key]: stats_to_display[key] = stats_to_display[key].replace("(Simulated)", simulation_note)
-            elif simulation_note not in stats_to_display[key]: stats_to_display[key] = f"{stats_to_display[key]}{simulation_note}"
-    return render_template('system_monitoring.html', stats=stats_to_display)
+        # Apply simulation note to string display values
+        for key in ["cpu_usage", "ram_usage", "storage_usage", "network_sent", "network_received", "uptime"]:
+            if key in stats_to_display: # stats_to_display is dummy_stats here
+                 if "(Simulated)" not in stats_to_display[key] and simulation_note not in stats_to_display[key]:
+                    stats_to_display[key] = stats_to_display[key].replace("(Simulated)", simulation_note) if "(Simulated)" in stats_to_display[key] else f"{stats_to_display[key]}{simulation_note}"
+        # Ensure numeric keys from dummy_stats are present
+        stats_to_display.setdefault("cpu_usage_percent", dummy_stats["cpu_usage_percent"])
+        stats_to_display.setdefault("ram_percent", dummy_stats["ram_percent"])
+        stats_to_display.setdefault("disk_percent", dummy_stats["disk_percent"])
+
+    return render_template('system_monitoring.html', stats=stats_to_display, pi_info=pi_info_data)
 
 @app.route('/camera', endpoint='camera_page')
 def camera_page(): return render_template('camera.html')
@@ -531,7 +647,9 @@ def processes():
     return render_template('processes.html', processes=processes_to_display)
 
 @app.route('/pi-info')
-def pi_info(): return render_template('pi_info.html', pi_info=dummy_pi_info)
+def pi_info():
+    pi_data = get_real_pi_info()
+    return render_template('pi_info.html', pi_info=pi_data)
 
 @app.route('/pinout')
 def pinout(): return render_template('pinout_diagrams.html')
@@ -558,17 +676,17 @@ def power(): return render_template('power_control.html')
 
 @app.route('/power/shutdown', methods=['POST'])
 def power_shutdown():
-    print("Simulating system shutdown...")
-    simulated_notifications.insert(0, {"message": "Simulated system shutdown initiated.", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-    # os.system("sudo shutdown now") # Real command
-    return "<h1>Simulated System Shutdown</h1><p>The system would now be shutting down. This is a simulation.</p><a href='/'>Back to Home</a>"
+    print("Attempting system shutdown...")
+    simulated_notifications.insert(0, {"message": "System shutdown initiated.", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    os.system("sudo shutdown now") # Real command
+    return "<h1>System Shutdown Initiated</h1><p>If this were a real Raspberry Pi, it would now be shutting down. Close this window.</p><a href='/'>Back to Home (if not shutting down)</a>"
 
 @app.route('/power/reboot', methods=['POST'])
 def power_reboot():
-    print("Simulating system reboot...")
-    simulated_notifications.insert(0, {"message": "Simulated system reboot initiated.", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-    # os.system("sudo reboot") # Real command
-    return "<h1>Simulated System Reboot</h1><p>The system would now be rebooting. This is a simulation.</p><a href='/'>Back to Home</a>"
+    print("Attempting system reboot...")
+    simulated_notifications.insert(0, {"message": "System reboot initiated.", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    os.system("sudo reboot") # Real command
+    return "<h1>System Reboot Initiated</h1><p>If this were a real Raspberry Pi, it would now be rebooting. Close this window.</p><a href='/'>Back to Home (if not rebooting)</a>"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

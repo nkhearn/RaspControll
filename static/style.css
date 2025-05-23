@@ -69,6 +69,12 @@ img.img-fluid {
     }
 }
 
+/* System Monitoring Page Progress Bars */
+.progress {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
 /* Ensure content area has some padding below the navbar */
 .container.mt-4 {
     margin-top: 1.5rem !important; /* Default Bootstrap spacing */
