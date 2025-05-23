@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Sensor Readings</h2>
+
+<div class="row">
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">DHT22 Sensor</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Temperature:</strong> {{ sensors.dht22.temperature }} 
+                    {% if sensors.dht22.simulated_reason %}<small class="text-muted">({{ sensors.dht22.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Humidity:</strong> {{ sensors.dht22.humidity }}
+                    {% if sensors.dht22.simulated_reason and 'temperature' not in sensors.dht22.simulated_reason %}<small class="text-muted">({{ sensors.dht22.simulated_reason }})</small>{% endif %}
+                </li>
+                {% if sensors.dht22.simulated_reason and 'temperature' in sensors.dht22.simulated_reason and 'humidity' in sensors.dht22.simulated_reason %}
+                    <li class="list-group-item"><small class="text-danger">Simulated: {{ sensors.dht22.simulated_reason }}</small></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">DS18B20 Temperature Sensor</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Temperature:</strong> {{ sensors.ds18b20.temperature }}
+                    {% if sensors.ds18b20.simulated_reason %}<small class="text-muted">({{ sensors.ds18b20.simulated_reason }})</small>{% endif %}
+                </li>
+                 {% if sensors.ds18b20.simulated_reason %}
+                    <li class="list-group-item"><small class="text-danger">Simulated: {{ sensors.ds18b20.simulated_reason }}</small></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">BMP180/BMP280 Sensor</div> <!-- Updated name -->
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Pressure:</strong> {{ sensors.bmp180.pressure }}
+                     {% if sensors.bmp180.simulated_reason %}<small class="text-muted">({{ sensors.bmp180.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Temperature:</strong> {{ sensors.bmp180.temperature }}
+                     {% if sensors.bmp180.simulated_reason and 'pressure' not in sensors.bmp180.simulated_reason %}<small class="text-muted">({{ sensors.bmp180.simulated_reason }})</small>{% endif %}
+                </li>
+                {% if sensors.bmp180.altitude %}
+                <li class="list-group-item"><strong>Altitude:</strong> {{ sensors.bmp180.altitude }}
+                     {% if sensors.bmp180.simulated_reason and 'pressure' not in sensors.bmp180.simulated_reason and 'temperature' not in sensors.bmp180.simulated_reason %}<small class="text-muted">({{ sensors.bmp180.simulated_reason }})</small>{% endif %}
+                </li>
+                {% endif %}
+                 {% if sensors.bmp180.simulated_reason %}
+                    <li class="list-group-item"><small class="text-danger">Simulated: {{ sensors.bmp180.simulated_reason }}</small></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">Sense HAT</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Temperature:</strong> {{ sensors.sense_hat.temperature }}
+                    {% if sensors.sense_hat.simulated_reason %}<small class="text-muted">({{ sensors.sense_hat.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Humidity:</strong> {{ sensors.sense_hat.humidity }}
+                    {% if sensors.sense_hat.simulated_reason and 'temperature' not in sensors.sense_hat.simulated_reason %}<small class="text-muted">({{ sensors.sense_hat.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Pressure:</strong> {{ sensors.sense_hat.pressure }}
+                    {% if sensors.sense_hat.simulated_reason and 'temperature' not in sensors.sense_hat.simulated_reason and 'humidity' not in sensors.sense_hat.simulated_reason %}<small class="text-muted">({{ sensors.sense_hat.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Joystick:</strong> {{ sensors.sense_hat.joystick }}
+                     {% if sensors.sense_hat.simulated_reason %}<small class="text-muted">({{ sensors.sense_hat.simulated_reason }})</small>{% endif %}
+                </li>
+                <li class="list-group-item"><strong>Orientation:</strong> {{ sensors.sense_hat.orientation }}
+                     {% if sensors.sense_hat.simulated_reason %}<small class="text-muted">({{ sensors.sense_hat.simulated_reason }})</small>{% endif %}
+                </li>
+                 {% if sensors.sense_hat.simulated_reason %}
+                    <li class="list-group-item"><small class="text-danger">Simulated: {{ sensors.sense_hat.simulated_reason }}</small></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
