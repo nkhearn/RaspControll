@@ -3,17 +3,17 @@
 {% block content %}
 <h2>Power Controls</h2>
 <div class="alert alert-danger" role="alert">
-    <strong>Warning:</strong> These actions simulate shutting down or rebooting the Raspberry Pi. Executing real power commands requires advanced configuration and carries security risks. Real commands are disabled by default in the application code. Proceed with caution.
+    <strong>Warning:</strong> These actions will attempt to shut down or reboot your Raspberry Pi. Ensure all work is saved. These commands require the application to have sudo privileges, which might need to be configured separately.
 </div>
 
 <div class="mt-4">
     <form action="{{ url_for('power_shutdown') }}" method="post" style="display: inline-block; margin-right: 10px;">
-        <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to simulate a shutdown?');">
+        <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to shut down the Raspberry Pi?');">
             <i class="bi bi-power" style="font-size: 1.2rem;"></i> Shutdown
         </button>
     </form>
     <form action="{{ url_for('power_reboot') }}" method="post" style="display: inline-block;">
-        <button type="submit" class="btn btn-warning btn-lg" onclick="return confirm('Are you sure you want to simulate a reboot?');">
+        <button type="submit" class="btn btn-warning btn-lg" onclick="return confirm('Are you sure you want to reboot the Raspberry Pi?');">
             <i class="bi bi-arrow-repeat" style="font-size: 1.2rem;"></i> Reboot
         </button>
     </form>

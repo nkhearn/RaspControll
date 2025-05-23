@@ -1,13 +1,45 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>System Monitoring</h2>
+<h2>System Dashboard</h2>
 <div class="row">
+    <!-- System Details Card -->
+    <div class="col-md-12">
+        <div class="card mb-3">
+            <div class="card-header">System Details</div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Model</dt>
+                    <dd class="col-sm-9">{{ pi_info.model }}</dd>
+
+                    <dt class="col-sm-3">SoC</dt>
+                    <dd class="col-sm-9">{{ pi_info.soc }}</dd>
+
+                    <dt class="col-sm-3">Total RAM</dt>
+                    <dd class="col-sm-9">{{ pi_info.ram }}</dd>
+
+                    <dt class="col-sm-3">OS Version</dt>
+                    <dd class="col-sm-9">{{ pi_info.os_version }}</dd>
+
+                    <dt class="col-sm-3">Kernel Version</dt>
+                    <dd class="col-sm-9">{{ pi_info.kernel_version }}</dd>
+
+                    <dt class="col-sm-3">Serial Number</dt>
+                    <dd class="col-sm-9">{{ pi_info.serial_number }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
     <div class="col-md-6">
         <div class="card mb-3">
             <div class="card-header">CPU Usage</div>
             <div class="card-body">
                 <p class="card-text">{{ stats.cpu_usage }}</p>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ stats.cpu_usage_percent }}%;" aria-valuenow="{{ stats.cpu_usage_percent }}" aria-valuemin="0" aria-valuemax="100">{{ stats.cpu_usage_percent }}%</div>
+                </div>
             </div>
         </div>
     </div>
@@ -16,6 +48,9 @@
             <div class="card-header">RAM Usage</div>
             <div class="card-body">
                 <p class="card-text">{{ stats.ram_usage }}</p>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ stats.ram_percent }}%;" aria-valuenow="{{ stats.ram_percent }}" aria-valuemin="0" aria-valuemax="100">{{ "%.2f"|format(stats.ram_percent|float) }}%</div>
+                </div>
             </div>
         </div>
     </div>
@@ -24,6 +59,9 @@
             <div class="card-header">Storage Usage</div>
             <div class="card-body">
                 <p class="card-text">{{ stats.storage_usage }}</p>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ stats.disk_percent }}%;" aria-valuenow="{{ stats.disk_percent }}" aria-valuemin="0" aria-valuemax="100">{{ "%.2f"|format(stats.disk_percent|float) }}%</div>
+                </div>
             </div>
         </div>
     </div>
